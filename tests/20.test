@@ -1,0 +1,27 @@
+## Use a block definition which varies in length
+. tests/setup
+
+cat <<'EOF' >"$TEST_INPUT"
+* Title
+
+** Subtitle
+
+Set the variable =greeting= to "hello".
+
+#+begin_src sh
+  greeting=hello
+#+end_src
+
+Use greeting.
+
+#+begin_src sh
+  echo "$greeting!"
+#+end_src
+EOF
+
+cat <<'EOF' >"$TEST_EXPECTED"
+hello!
+EOF
+
+./dram blockdef='^#\\+(begin|end)_src' ignoreblockdeflength=1 words=sh "$TEST_INPUT" | /bin/sh >"$TEST_OUTPUT"
+check

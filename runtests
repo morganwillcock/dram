@@ -1,0 +1,16 @@
+#!/bin/sh
+
+RC=0
+
+for awk; do
+    subdir="build_$awk"
+    rm -rf "$subdir"
+    (
+        mkdir "$subdir" && \
+            cd "$subdir" && \
+            ../configure AWK_INTERP="$(command -v "$awk")" && \
+            make check
+    ) || RC=1
+done
+
+exit $RC

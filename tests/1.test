@@ -1,0 +1,37 @@
+## All blocks
+. tests/setup
+
+cat <<'EOF' >"$TEST_INPUT"
+```
+block 1
+```
+
+````
+```
+block 2
+```
+````
+
+```
+```
+
+```sh
+block 4
+```
+
+````
+````
+````
+````
+EOF
+
+cat <<'EOF' >"$TEST_EXPECTED"
+block 1
+```
+block 2
+```
+block 4
+EOF
+
+./dram "$TEST_INPUT" >"$TEST_OUTPUT"
+check

@@ -1,0 +1,161 @@
+#!/usr/bin/awk -f
+
+# MIT License
+#
+# Copyright (c) 2021 Morgan Willcock
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+BEGIN {
+    ## the regex pattern used tp open and close a block
+    blockdef = "^````*"
+
+    ## the current block number
+    blocknum = 0
+
+    ## whether the closing blockdef match length must match the width
+    ## of the opening blockdef match
+    ignoreblockdeflength = 0
+
+    ## indicate whether capture is currently active (> 0) and the
+    ## match length required to close the block
+    inblock = 0
+}
+
+{
+    if (match($0, blockdef)) {
+        ## start capture
+        if (!inblock) {
+            inblock = RLENGTH
+            blocknum ++
+
+            ## reset counters
+            data[blocknum, "lcount"] = 0
+            data[blocknum, "wcount"] = 0
+
+            ## store trimmed infostring
+            data[blocknum, "infostring"] = substr($0, RLENGTH+1)
+            sub(/^[ \t]+/, "", data[blocknum, "infostring"])
+            sub(/[ \t]+$/, "", data[blocknum, "infostring"])
+
+            ## special case for first field
+            if (length($1) > RLENGTH) {
+                ## remove block start marker from first field
+                $1 = substr($1, RLENGTH+1)
+                i = 1
+            } else {
+                ## skip the field if it was just the block start marker
+                i = 2
+            }
+
+            ## store all infostring words
+            for (; i <= NF; i ++) {
+                data[blocknum, "word", ++ data[blocknum, "wcount"]] = $i
+            }
+
+            next
+        }
+
+        ## stop capture
+        if (ignoreblockdeflength || inblock == RLENGTH) {
+            inblock = 0
+            next
+        }
+    }
+
+    ## write into capture array
+    if (inblock) {
+        data[blocknum, "line", ++ data[blocknum, "lcount"]] = $0
+    }
+}
+
+function set_order(    custom, count, i) {
+    ## create order array based on splitting block sequence argument
+    custom = split(blocks, order, /[ \t,]/)
+
+    if (custom) {
+        ## rewrite order to remove out of range values
+        count = 0
+
+        for (i = 1; i <= custom; i ++) {
+            ## ignore 0
+            if (order[i] == 0) {
+                continue
+            }
+
+            ## negative wrap around
+            if (order[i] < 0) {
+                order[i] = 1 + blocknum + order[i]
+            }
+
+            ## regular block range
+            if (n <= blocknum) {
+                order[++ count] = order[i]
+            }
+        }
+    } else {
+        ## use all blocks
+        count = blocknum
+
+        for (i = 1; i <= blocknum; i ++) {
+            order[i] = i
+        }
+    }
+
+    return count
+}
+
+function get_match(blockn, pcount,    matched, i, j) {
+    for (i = 1; i <= pcount; i ++) {
+        matched = 0
+
+        for (j = 1; j <= data[blockn, "wcount"]; j ++) {
+            if (data[blockn, "word", j] == wordmatch[i]) {
+                matched = 1
+                break
+            }
+        }
+
+        if (!matched) {
+            return 0
+        }
+    }
+
+    return 1
+}
+
+END {
+    ## create array of words to match based on splitting words argument
+    matchreq = split(words, wordmatch, /[ \t,]/)
+    count = set_order()
+
+    for (i = 1; i <= count; i ++) {
+        ## regex match on the trimmed infostring
+        if (data[order[i], "infostring"] ~ pattern) {
+            ## skip if there were words to match and matching failed
+            if (matchreq && !get_match(order[i], matchreq)) {
+                continue
+            }
+
+            for (j = 1; j <= data[order[i], "lcount"]; j ++) {
+                print data[order[i], "line", j]
+            }
+        }
+    }
+}

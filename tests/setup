@@ -1,0 +1,10 @@
+TEST_INPUT="$0.in"
+TEST_OUTPUT="$0.out"
+TEST_EXPECTED="$0.exp"
+RC=0
+
+check()
+{
+    diff "$TEST_EXPECTED" "$TEST_OUTPUT" || RC=1
+    exit $RC
+}

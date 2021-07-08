@@ -1,0 +1,4 @@
+#!/bin/sh
+
+dirname=$(dirname "$0")
+autoreconf --install "$dirname"

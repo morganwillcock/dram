@@ -1,0 +1,42 @@
+## Custom block re-order: -1,0,2,-3
+. tests/setup
+
+cat <<'EOF' >"$TEST_INPUT"
+```
+block 1
+```
+
+````
+```
+block 2
+```
+````
+
+```
+```
+
+```sh
+block 4
+```
+
+````
+````
+````
+````
+
+```
+block 7
+```
+EOF
+
+cat <<'EOF' >"$TEST_EXPECTED"
+block 7
+block 7
+```
+block 2
+```
+block 4
+EOF
+
+./dram blocks=-1,7,0,2,-3,-4 "$TEST_INPUT" >"$TEST_OUTPUT"
+check

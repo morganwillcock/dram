@@ -1,0 +1,70 @@
+## Single word match, match whole string, custom block order: 15 10 9 4 3 2 1
+. tests/setup
+
+cat <<'EOF' >"$TEST_INPUT"
+```
+block 1
+```
+
+````
+```
+block 2
+```
+````
+
+```
+```
+
+````
+````
+````
+````
+
+```sh
+block with language
+```
+
+``` sh
+block with spaced language
+```
+
+```	sh
+block with tabbed language
+```
+
+``` 	 	sh
+block with spaced and tabbed language
+```
+
+``` sh one two three
+block with spaced language and words
+```
+
+```	sh	one	two	three
+block with tabbed language and words
+```
+
+``` 	 	sh one	two 	 	three
+block with spaced and tabbed language and words
+```
+
+``` sh one two three 
+block with trailing spaced language and words
+```
+
+```	sh	one	two	three	
+block with trailing tabbed language and words
+```
+
+``` 	 	sh one	two 	 	three 	
+block with trailing spaced and tabbed language and words
+```
+EOF
+
+cat <<'EOF' >"$TEST_EXPECTED"
+block with trailing spaced and tabbed language and words
+block with spaced language and words
+EOF
+
+./dram blocks='15 10 9 4 3 2 1' pattern=^sh words=two "$TEST_INPUT" >"$TEST_OUTPUT"
+check
