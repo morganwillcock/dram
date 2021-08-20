@@ -1,0 +1,538 @@
+                               __________
+
+                                DRAM 1.0
+                               __________
+
+
+Table of Contents
+_________________
+
+Introduction
+Building and installation
+Examples
+.. Selection based on block ordering
+.. Executing code
+.. Selection based on info-string words
+.. Selection based on info-string pattern matching
+.. Custom block definition length
+.. Custom block definition pattern
+Reference
+.. Optional variables (arguments)
+.. Processing order
+.. Copyright and license
+
+
+
+
+
+Introduction
+============
+
+  `dram' is a utility intended to export block content from plain-text
+  files. Given a source document such as this one:
+
+    # Say hello
+  
+    ## Set the message
+  
+    ```sh
+    msg=hello
+    ```
+  
+    ## Output the message
+  
+    ```sh
+    echo $msg
+    ```
+  
+  `dram' can export the block content.
+
+    dram say_hello.md
+  
+    => msg=hello
+    => echo $msg
+  
+  Exported content is written to stdout. Code can easily be executed by
+  redirecting output to a file or piping it directly to a script
+  interpreter.
+
+    dram say_hello.md | /bin/sh
+  
+    => hello
+  
+  The primary use case is to provide bootstrap functionality to
+  deployment or build systems by retrieving content from within
+  plain-text documentation.
+
+  `dram' only requires an AWK interpreter to run. The majority of
+  environments will already provide one.
+
+  The default configuration identifies block content based on the match
+  pattern commonly used by Markdown specifications: at least three
+  backticks at the beginning of a line.
+
+  Any trailing text which appears on the same line as the pattern match
+  which identified the block opening is referred to as the
+  "info-string". This can be pattern matched or word searched separately
+  as part of the block selection criteria.
+
+
+Building and installation
+=========================
+
+  If building a development version rather than a release begin by
+  running the bootstrap script. This process requires that Autoconf and
+  Automake are installed.
+
+    ./bootstrap
+  
+  To build referencing `gawk', `mawk', `nawk', or `awk' as the AWK
+  interpreter, in that order of preference, run `configure' and then run
+  `make'.
+
+    ./configure
+    make
+  
+  To specify the AWK binary to use instead of using the automatic search
+  specify an interpreter path by setting the variable `AWK_INTERP' when
+  running `configure'.
+
+    ./configure AWK_INTERP=/usr/bin/nawk
+    make
+  
+  Additional targets are available for running tests, installing, and
+  uninstalling:
+
+    make check
+    make install
+    make uninstall
+
+
+Examples
+========
+
+Selection based on block ordering
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The simplest approach to extracting code blocks from a source document
+  is to do so based on the order in which they appear within the
+  document.
+
+  Given the following source document:
+
+    # Heading
+  
+    ```
+    one
+    ```
+  
+    ```
+    two
+    ```
+  
+    ```
+    three
+    ```
+  
+  Output all block contents in the order they appear in the document by
+  specifying no arguments:
+
+    dram three_blocks.md
+  
+    => one
+    => two
+    => three
+  
+  To select specific blocks use the `blocks' argument and specify the
+  target blocks based on the order in which they appear in the document.
+
+    dram blocks='2 3' three_blocks.md
+  
+    => two
+    => three
+  
+  For convenience the block selection can also be specified using commas
+  to separate the values.
+
+    dram blocks=2,3 three_blocks.md
+  
+    => two
+    => three
+  
+  Negative values wrap around and can be used to select blocks relative
+  to the end of the file rather than its beginning.
+
+    dram blocks=-1,-2,-3 three_blocks.md
+  
+    => three
+    => two
+    => one
+  
+  The selection for block 0 is reserved for future use and does not
+  return a value. Any positive or negative value which is out of range
+  does not return a value.
+
+    dram blocks=-4,0,1,4 three_blocks.md
+  
+    => one
+
+
+Executing code
+~~~~~~~~~~~~~~
+
+  Since content from all blocks is written to stdout the easiest way to
+  execute any code stored in the the blocks is to pipe all output
+  directly into stdin of a script interpreter.
+
+  Given the follow source document:
+
+    ```sh
+    msg=hi
+    ```
+  
+    ```sh
+    echo "${msg:=hello}"
+    ```
+  
+  The output of stdout when selecting both blocks is effectively a two
+  line shell script which can be piped into a shell script interpreter:
+
+    dram say_message.md | /bin/sh
+  
+    => hi
+  
+  The same result can be achieved by writing the output to a file and
+  then executing or compiling it as a second stage:
+
+    dram say_message.md >/tmp/script
+    /bin/sh /tmp/script
+  
+    => hi
+  
+  If logic of the code is spread over multiple blocks then the selection
+  criteria can be used to change the behaviour.
+
+    dram blocks=2 say_message.md | /bin/sh
+  
+    => hello
+  
+  A simple way to modify behaviour of the code originating from a single
+  block is for it to optionally use the values of environment variables.
+
+    dram blocks=2 say_message.md | msg=goodbye /bin/sh
+  
+    => goodbye
+
+
+Selection based on info-string words
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It is common for the opening character sequence for a code block to
+  include additional text. There is generally no fixed specification on
+  how such text should be formatted or what it should represent but the
+  most common usage is that the info-string consists of white-space
+  separated words, with the first word representing the language used
+  within the code block. Typically the language is only supplied as a
+  hint to apply syntax highlighting but also works nicely to select
+  blocks of scripted code and pass them to the relevant interpreter or
+  compiler.
+
+  Given the following source document:
+
+    ```sh
+    echo hello
+    ```
+  
+    ```sh
+    echo "${msg:=hello}"
+    ```
+  
+    ```py python2 python3
+    from os import getenv
+    from sys import version_info
+    msg = getenv('msg', 'hello')
+    ```
+  
+    ```py python2
+    for x in xrange(1, 4):
+        print('%d: Python %d says %s' % (x, version_info.major, msg))
+    ```
+  
+    ```py python3 latest
+    for x in range(1, 4):
+        print('{0}: Python {1} says {2}'.format(x, version_info.major, msg))
+    ```
+  
+  Use the `words' argument to select only the blocks whose info-string
+  contains the supplied words.
+
+    dram words=sh multi_language.md | msg=goodbye /bin/sh
+  
+    => hello
+    => goodbye
+  
+  Specifying more than one word will provide additional filtering to the
+  selection. All the specified words must be present in the info-string
+  text for the result to be classed as a match; the order in which the
+  words are specified is not considered as part of the selection
+  criteria. Labelling the blocks with words which indicate the script
+  interpreter allows easy targeting for which blocks will be executed.
+
+    dram words='python2 py' multi_language.md | msg=goodbye python2
+  
+    => 1: Python 2 says goodbye
+    => 2: Python 2 says goodbye
+    => 3: Python 2 says goodbye
+  
+  Note that the order of the blocks in the source document and selection
+  criteria are critical to result. In this instance the default ordering
+  infers that the third block acts as a potential header for the code in
+  the fourth and fifth blocks.
+
+  The following would be an error since the import statements required
+  by the fourth and fifth blocks haven't been passed to the interpreter.
+
+    # an error introduced by block selection
+    dram words='python3 py latest' multi_language.md | msg=goodbye python3
+  
+  Potential solutions to this problem could be to:
+  - remove "latest" from the words argument when running the program
+  - add "latest" to the info-string of the third block in the source
+    document
+  - remove "latest" from the info-string of the fifth block in the
+    source document
+  - remove the third block from the source document entirely and add the
+    same content directly into the top of the two remaining python
+    blocks
+
+
+Selection based on info-string pattern matching
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Where selecting blocks based on an unordered word match will not be
+  specific enough, or where words may be confused as a language
+  identifier, a more specific block selection may be performed by
+  specifying a regular expression which must find a match within the
+  info-string text.
+
+  Given the following source document:
+
+    ```sh tcl
+    echo Opening the Tcl website...
+    xdg-open https://www.tcl-lang.org/
+    ```
+  
+    ```tcl sh
+    puts "sh path is '[auto_execok sh]'"
+    ```
+  
+    ``` tcl message
+    if {[catch {puts $::env(msg)}]} {
+        puts hello
+    }
+    ```
+  
+  Use the `pattern' argument to specify the regular expression which
+  must match a portion of the info-string line. Note that leading and
+  trailing white-space of the info-string line is removed prior to the
+  comparison so the pattern itself doesn't have to accommodate leading
+  or trailing white-space characters.
+
+    dram pattern=^tcl tcl.md | msg=goodbye tclsh
+  
+    => sh path is '/usr/bin/sh'
+    => goodbye
+
+
+Custom block definition length
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  By default the pattern match identifying the closing line of a block
+  is required to be equal in length to the pattern match which occurred
+  to open the block. This allows the same pattern plus additional
+  content to appear within the block whilst keeping it opening.
+
+  Given the following source document:
+
+    ````
+    ```
+    `````
+    one
+    `````
+    ```
+    ````
+  
+    ```
+    `````
+    two
+    `````
+    ```
+  
+  The default behaviour allows `blockdef' pattern matches of different
+  lengths to the match which opened the block to feature as block
+  content:
+
+    dram symetrical_blocks.md
+  
+    => ```
+    => `````
+    => one
+    => `````
+    => ```
+    => `````
+    => two
+    => `````
+  
+  If the block definition length check is ignored by setting
+  `ignoreblockdeflength' to 1 then the block may be closed early if the
+  same sequence occurs within the block. For an odd number of matches
+  the effect may be that leading and trailing lines which also match
+  block definition are stripped from the output. For an even number of
+  matches the effect may be the definition of multiple empty blocks and
+  so no output is produced.
+
+    dram ignoreblockdeflength=1 symetrical_blocks.md
+  
+    => one
+
+
+Custom block definition pattern
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  To facilitate matching block content for formats which are dissimilar
+  to Markdown the pattern used to match blocks may be customised. This
+  can be particularly useful where the pattern used to a close a block
+  differs from the pattern used to open the block.
+
+  Given the following source document:
+
+    #+begin_src sh
+    echo hello
+    #+end_src
+  
+  Setting `blockdef' to a regular expression which incorporates a match
+  group allows the matching of the opening and closing of a block. Note
+  that where the match length may vary between the opening and closing
+  of the block the match length must also be ignored by setting
+  `ignoreblockdeflength' to 1.
+
+    dram blockdef='^#\\+(begin|end)_src' ignoreblockdeflength=1 say_hello.org | /bin/sh
+  
+    => hello
+
+
+Reference
+=========
+
+Optional variables (arguments)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Export behaviour maybe modified by setting these variables. These are
+  passed directly to the AWK interpreter and should precede any input
+  filenames which are specified if they are to be in-effect.
+
+  blockdef
+        The regular expression used to match the opening and closing
+        line of a block.
+
+        If not specified the default value is "^````*" which will match
+        block specifications for common Markdown implementations.
+
+          # exactly 3 backticks only
+          dram blockdef=^``` $INPUT_FILE
+
+  ignoreblockdeflength
+        Ignore the length of the pattern match which opened the block.
+
+        By default the length of the pattern match which closes a block
+        must match the length of the pattern match which was used to
+        open that same block. Setting this variable to 1 will close the
+        block on any line which matches the `blockdef' pattern
+        irrespective of the match length. The default value is 0.
+
+          # export Org mode source blocks
+          dram blockdef='^#\\+(begin|end)_src' ignoreblockdeflength=1 $INPUT_FILE
+
+  blocks
+        Define the output order.
+
+        By default block content is output in the order that it appears
+        in the source file. By specifying a space or comma separated
+        list of block numbers the ordering may be modified.
+
+        The value of 1 represents the first block. Negative values
+        select from the end of the list; -1 represents the final
+        block. 0 returns nothing and is reserved for future use.
+
+          # get the content from the first and last block
+          dram blocks=1,-1 $INPUT_FILE
+
+  words
+        Words which must appear in the info-string text to qualify the
+        block for selection.
+
+        By default the block is selected irrespective of info-string
+        contents. By specifying a space separated list of words only
+        blocks whose info-string text contains all of the specified
+        words will be exported. Note that the order of the words is not
+        considered.
+
+          # export shell source blocks only and pipe to interpreter
+          dram words=sh $INPUT_FILE | /bin/sh
+
+  pattern
+        A regular expression pattern which must match the info-string
+        text to qualify the block for selection.
+
+        By default the block is selected irrespective of info-string
+        contents. By specifying a regular expression pattern only blocks
+        whose info-string value contains a match will be exported. Note
+        that leading and trailing white-space is trimmed from the
+        info-string value before the match is checked.
+
+          # export shell source blocks only and pipe to interpreter
+          dram pattern=^sh $INPUT_FILE | /bin/sh
+
+  FS
+        The standard AWK variable FS is used to split the info-string
+        text into words.
+
+
+Processing order
+~~~~~~~~~~~~~~~~
+
+  The block selection process runs in the follow order:
+  - All blocks are read
+  - Blocks are selected based on the value of `blocks'
+  - Blocks are deselected if the trimmed info-string text does not
+    contain a match for the regular expression specified as the value of
+    `pattern'
+  - Blocks are deselected if the trimmed info-string text does not
+    contain all of the words specified as the value of `words'
+
+
+Copyright and license
+~~~~~~~~~~~~~~~~~~~~~
+
+  MIT License
+
+  Copyright (c) 2021 Morgan Willcock
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
