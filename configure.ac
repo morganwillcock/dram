@@ -1,6 +1,7 @@
 AC_PREREQ([2.71])
 AC_INIT([dram], [1.0])
 AC_CONFIG_AUX_DIR([build-aux])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AM_INIT_AUTOMAKE([-Werror -Wall foreign subdir-objects])
 AM_SILENT_RULES([yes])
 
@@ -28,7 +29,7 @@ AC_CONFIG_FILES([Makefile])
 
 # Link tests and setup test files variable
 m4_define([TESTSCRIPT_LIST],
-    [m4_normalize(m4_esyscmd([find tests -name '*.test' | sort -t/ -k2n]))])
+    [m4_normalize(m4_esyscmd([find tests -name '??-*.test' | sort]))])
 m4_foreach_w([TEST_FILE], TESTSCRIPT_LIST,
     [AC_CONFIG_LINKS(TEST_FILE:TEST_FILE)])
 AC_CONFIG_LINKS([tests/setup:tests/setup])

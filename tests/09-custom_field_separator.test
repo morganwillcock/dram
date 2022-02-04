@@ -1,0 +1,33 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+```sh one
+block 1
+```
+
+```sh one,two
+block 2
+```
+
+```sh one,two,three
+block 3
+```
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+block 3
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram FS='[ ,]' words='sh two three')" \
+          "Custom FS as word separator"
+
+
+tap_check "$(cat <<'EOF'
+block 3
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram -v FS='[ ,]' words='sh two three')" \
+          "Custom FS as word separator using -v"

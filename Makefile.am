@@ -4,6 +4,9 @@ EXTRA_DIST = README LICENSE source/README.org $(TESTS) tests/setup
 
 CLEANFILES = $(bin_SCRIPTS)
 
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' \
+	$(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
+
 dram: $(srcdir)/source/dram
 	"$(AWK)" 'FNR==1 { $$1 = "#!$(AWK_INTERP)" } { print }'	\
 	    $(srcdir)/source/dram > $@.tmp

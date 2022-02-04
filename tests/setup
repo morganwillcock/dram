@@ -1,10 +1,48 @@
-TEST_INPUT="$0.in"
-TEST_OUTPUT="$0.out"
-TEST_EXPECTED="$0.exp"
-RC=0
+#!/bin/sh
 
-check()
+set -u
+tap_count=0
+
+# shellcheck disable=SC2034  # token2 is just the boundary for token1
+while read -r token1 token2; do
+    if [ "$token1" = tap_check ]; then
+        tap_count=$((tap_count + 1))
+    fi
+done < "$0"
+
+if [ "$tap_count" -eq 0 ]; then
+    >&2 printf "No tests found in file '%s'\n" "$0"
+    exit 1
+fi
+
+printf "1..%d\n" $tap_count
+tap_count=0
+
+tap_check()
 {
-    diff "$TEST_EXPECTED" "$TEST_OUTPUT" || RC=1
-    exit $RC
+    expected=$1
+    output=$2
+    set +u
+    description=$3
+    directive=$4
+    set -u
+
+    tap_count=$((tap_count + 1))
+    result="ok $tap_count"
+
+    if [ "$output" != "$expected" ]; then
+        result="not $result"
+    fi
+
+    if [ -n "$description" ]; then
+        result="$result - $description"
+    fi
+
+    if [ -n "$directive" ]; then
+        result="$result # $directive"
+    fi
+
+    echo "$result"
+    echo "$output" | paste -d '#' /dev/null -
+    unset expected output description directive result
 }

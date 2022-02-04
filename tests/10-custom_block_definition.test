@@ -1,0 +1,31 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+Title
+=====
+
+Subtitle
+--------
+
+Set the variable 'greeting' to "hello".
+
+@@@sh
+  greeting=hello
+@@@
+
+Use greeting.
+
+@@@ sh
+  echo "$greeting!"
+@@@
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+hello!
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blockdef='^@@@@*' pattern=^sh | /bin/sh)" \
+          "Custom block definition"

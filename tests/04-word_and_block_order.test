@@ -1,7 +1,8 @@
-## Single word match
+#!/bin/sh
+
 . tests/setup
 
-cat <<'EOF' >"$TEST_INPUT"
+TEST_INPUT=$(cat <<'EOF'
 ```
 block 1
 ```
@@ -60,19 +61,12 @@ block with trailing tabbed language and words
 block with trailing spaced and tabbed language and words
 ```
 EOF
+)
 
-cat <<'EOF' >"$TEST_EXPECTED"
-block with language
-block with spaced language
-block with tabbed language
-block with spaced and tabbed language
-block with spaced language and words
-block with tabbed language and words
-block with spaced and tabbed language and words
-block with trailing spaced language and words
-block with trailing tabbed language and words
+tap_check "$(cat <<'EOF'
 block with trailing spaced and tabbed language and words
+block with language
 EOF
-
-./dram words=sh "$TEST_INPUT" >"$TEST_OUTPUT"
-check
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks='2 15 3 6 4' words=sh)" \
+          "Single word match, custom block order: 2 15 3 6 4"

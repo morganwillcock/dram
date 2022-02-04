@@ -1,7 +1,8 @@
-## Single word match, match whole string, custom block order: 2 3 3 2
+#!/bin/sh
+
 . tests/setup
 
-cat <<'EOF' >"$TEST_INPUT"
+TEST_INPUT=$(cat <<'EOF'
 ```
 block 1
 ```
@@ -60,8 +61,9 @@ block with trailing tabbed language and words
 block with trailing spaced and tabbed language and words
 ```
 EOF
+)
 
-cat <<'EOF' >"$TEST_EXPECTED"
+tap_check "$(cat <<'EOF'
 block with spaced language and words
 block with tabbed language and words
 block with spaced and tabbed language and words
@@ -69,6 +71,18 @@ block with trailing spaced language and words
 block with trailing tabbed language and words
 block with trailing spaced and tabbed language and words
 EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram pattern='^sh.*two')" \
+          "Pattern match within string"
 
-./dram pattern='^sh.*three$' "$TEST_INPUT" >"$TEST_OUTPUT"
-check
+tap_check "$(cat <<'EOF'
+block with spaced language and words
+block with tabbed language and words
+block with spaced and tabbed language and words
+block with trailing spaced language and words
+block with trailing tabbed language and words
+block with trailing spaced and tabbed language and words
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram pattern='^sh.*three$')" \
+          "Pattern match full string"

@@ -1,0 +1,104 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+```
+block 1
+```
+
+````
+```
+block 2
+```
+````
+
+```
+```
+
+````
+````
+````
+````
+
+```sh
+block with language
+```
+
+``` sh
+block with spaced language
+```
+
+```	sh
+block with tabbed language
+```
+
+``` 	 	sh
+block with spaced and tabbed language
+```
+
+``` sh one two three
+block with spaced language and words
+```
+
+```	sh	one	two	three
+block with tabbed language and words
+```
+
+``` 	 	sh one	two 	 	three
+block with spaced and tabbed language and words
+```
+
+``` sh one two three 
+block with trailing spaced language and words
+```
+
+```	sh	one	two	three	
+block with trailing tabbed language and words
+```
+
+``` 	 	sh one	two 	 	three 	
+block with trailing spaced and tabbed language and words
+```
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+block with language
+block with spaced language
+block with tabbed language
+block with spaced and tabbed language
+block with spaced language and words
+block with tabbed language and words
+block with spaced and tabbed language and words
+block with trailing spaced language and words
+block with trailing tabbed language and words
+block with trailing spaced and tabbed language and words
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram words=sh)" \
+          "Single word match"
+
+tap_check "$(cat <<'EOF'
+block with spaced language and words
+block with tabbed language and words
+block with spaced and tabbed language and words
+block with trailing spaced language and words
+block with trailing tabbed language and words
+block with trailing spaced and tabbed language and words
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram words='sh two')" \
+          "Multi-word match"
+
+tap_check "$(cat <<'EOF'
+block with spaced language and words
+block with tabbed language and words
+block with spaced and tabbed language and words
+block with trailing spaced language and words
+block with trailing tabbed language and words
+block with trailing spaced and tabbed language and words
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram words='sh two two')" \
+          "Repeating word match"

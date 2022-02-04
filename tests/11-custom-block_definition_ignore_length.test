@@ -1,0 +1,29 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+* Title
+
+** Subtitle
+
+Set the variable =greeting= to "hello".
+
+#+begin_src sh
+  greeting=hello
+#+end_src
+
+Use greeting.
+
+#+begin_src sh
+  echo "$greeting!"
+#+end_src
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+hello!
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blockdef='^#\\+(begin|end)_src' ignoreblockdeflength=1 words=sh | /bin/sh)" \
+          "Custom block definition of variable length"

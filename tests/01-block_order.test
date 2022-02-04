@@ -1,0 +1,96 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+```
+block 1
+```
+
+````
+```
+block 2
+```
+````
+
+```
+```
+
+```sh
+block 4
+```
+
+````
+````
+````
+````
+
+```
+block 7
+```
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+block 1
+```
+block 2
+```
+block 4
+block 7
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram)" \
+          "All blocks"
+
+tap_check "$(cat <<'EOF'
+```
+block 2
+```
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=2)" \
+          "Just the second block"
+
+tap_check "$(cat <<'EOF'
+```
+block 2
+```
+block 4
+block 1
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks='2 4 3 1')" \
+          "Custom block re-order: 2 4 3 1"
+
+tap_check "$(cat <<'EOF'
+```
+block 2
+```
+block 4
+block 1
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=2,4,3,1)" \
+          "Custom block re-order with empty: 2,4,3,1"
+
+tap_check "$(cat <<'EOF'
+```
+block 2
+```
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=99999,2,99999)" \
+          "Custom block re-order with out-of-range: 99999,2,99999"
+
+tap_check "$(cat <<'EOF'
+block 7
+block 7
+```
+block 2
+```
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-1,7,0,2,-3,-4)" \
+          "Custom block re-order with negatives: -1,0,2,-3"
