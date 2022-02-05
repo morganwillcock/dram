@@ -3,7 +3,6 @@ AC_INIT([dram], [1.0])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AM_INIT_AUTOMAKE([-Werror -Wall foreign subdir-objects])
-AM_SILENT_RULES([yes])
 
 # Find an Emacs for optional documentation build
 AM_PATH_LISPDIR
