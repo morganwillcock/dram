@@ -680,6 +680,16 @@ The block selection process runs in the follow order:
 
 *** Version 1.1 (unreleased)
 
+- Enable VPATH builds for documentation files
+
+  Initially the build targets for the documentation were only
+  functional when building within the source directory. The build
+  process now adjusts its working directory and the license file is
+  linked into position to enable VPATH builds for the README and
+  ChangeLog files.
+
+  This allows the "distcheck" target to run in VPATH builds.
+
 - Switch tests to use Test Anything Protocol
 
   The included test scripts have been modified to produce output which

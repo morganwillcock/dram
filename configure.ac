@@ -23,6 +23,7 @@ AS_IF([test "x${AWK_INTERP}" = x],
     [AC_MSG_ERROR([could not find an Awk])])
 
 AC_CONFIG_LINKS([source/dram:source/dram])
+AC_CONFIG_LINKS([LICENSE:LICENSE])
 AC_CONFIG_SRCDIR([source/dram])
 AC_CONFIG_FILES([Makefile])
 

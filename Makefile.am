@@ -16,8 +16,9 @@ dram: $(srcdir)/source/dram
 ChangeLog: $(srcdir)/source/README.org
 	$(EMACS) --batch --quick \
 	    --load=org --load=ox \
-	    --file=source/README.org \
+	    --file=$(srcdir)/source/README.org \
 	    --eval "(setq dram-version \"$(PACKAGE_VERSION)\")" \
+	    --eval "(cd \"$$(pwd)/source\")" \
 	    --eval "(setq org-confirm-babel-evaluate \
 	              (lambda (lang body) \
 	                (not (member lang '(\"emacs-lisp\")))))" \
@@ -33,8 +34,9 @@ README: $(srcdir)/source/README.org $(srcdir)/source/dram $(top_srcdir)/configur
 	command -v tclsh
 	$(EMACS) --batch --quick \
 	    --load=org --load=ox --load=ob-shell \
-	    --file=source/README.org \
+	    --file=$(srcdir)/source/README.org \
 	    --eval "(setq dram-version \"$(PACKAGE_VERSION)\")" \
+	    --eval "(cd \"$$(pwd)/source\")" \
 	    --eval "(org-babel-tangle)" \
 	    --eval "(setq org-confirm-babel-evaluate \
 	              (lambda (lang body) \
