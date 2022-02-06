@@ -1,6 +1,6 @@
 bin_SCRIPTS = dram
 
-EXTRA_DIST = README LICENSE source/README.org $(TESTS) tests/setup
+EXTRA_DIST = ChangeLog README LICENSE source/README.org $(TESTS) tests/setup
 
 CLEANFILES = $(bin_SCRIPTS)
 
@@ -12,6 +12,19 @@ dram: $(srcdir)/source/dram
 	    $(srcdir)/source/dram > $@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
+
+ChangeLog: $(srcdir)/source/README.org
+	$(EMACS) --batch --quick \
+	    --load=org --load=ox \
+	    --file=source/README.org \
+	    --eval "(setq dram-version \"$(PACKAGE_VERSION)\")" \
+	    --eval "(setq org-confirm-babel-evaluate \
+	              (lambda (lang body) \
+	                (not (member lang '(\"emacs-lisp\")))))" \
+	    --eval "(org-id-goto \"54944074-2040-4250-8475-45827a054591\")" \
+	    --eval "(org-babel-execute-subtree)" \
+	    --eval "(org-id-goto \"3594bd9a-59c7-4a83-98f5-2531257ead3c\")" \
+	    --eval "(org-export-to-file 'ascii \"../$@\" nil t)"
 
 README: $(srcdir)/source/README.org $(srcdir)/source/dram $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) dram
@@ -29,7 +42,7 @@ README: $(srcdir)/source/README.org $(srcdir)/source/dram $(top_srcdir)/configur
 	    --eval "(org-babel-execute-buffer)" \
 	    --eval "(org-export-to-file 'ascii \"../$@\")"
 
-dist-hook: README
+dist-hook: ChangeLog README
 
 clean-local:
 	find tests -name "*.test.*" -exec rm '{}' \;

@@ -13,6 +13,9 @@
 #+MACRO: version (eval (progn (defvar dram-version "DEV") dram-version))
 
 * Setup :noexport:
+:PROPERTIES:
+:ID:       54944074-2040-4250-8475-45827a054591
+:END:
 
 Prepend output indicator to Org mode results.
 
@@ -45,6 +48,13 @@ around an issue with the ASCII export heading indentation.
 
 #+begin_src emacs-lisp
   (setq-default indent-tabs-mode nil)
+#+end_src
+
+Set the export format for date and time stamps.
+
+#+begin_src emacs-lisp
+  (setq org-time-stamp-custom-formats '("(%F)" . "(%F %H:%M)"))
+  (setq org-display-custom-times t)
 #+end_src
 
 Remove the box art which is written unconditionally by the ASCII exporter.
@@ -661,6 +671,60 @@ The block selection process runs in the follow order:
   =pattern=
 - Blocks are deselected if the trimmed info-string text does not
   contain all of the words specified as the value of =words=
+
+** Change log
+:PROPERTIES:
+:EXPORT_OPTIONS: title:nil toc:nil
+:ID:       3594bd9a-59c7-4a83-98f5-2531257ead3c
+:END:
+
+*** Version 1.1 (unreleased)
+
+- Switch tests to use Test Anything Protocol
+
+  The included test scripts have been modified to produce output which
+  should conform to version 12 of the Test Anything Protocol (TAP)
+  Specification. The output of the test scripts is read by a TAP
+  consumer supplied as part of GNU Automake. As part of this change
+  the expected and observed outputs of each test are no longer written
+  to disk and compared with the =diff= utility, instead these values
+  are kept as strings and compared within the testing script. The
+  observed output of the test is emitted from each test as a sequence
+  of TAP diagnostic lines.
+
+  Following these changes:
+
+  - To view the observed output of every test as it runs modify the
+    environment variable =TEST_LOG_DRIVER_FLAGS= to include the option
+    "--comments".
+
+    #+begin_src sh :eval never
+      TEST_LOG_DRIVER_FLAGS=--comments make check
+    #+end_src
+
+  - Alternative TAP consumers can be used by spooling the test script
+    output or the Automake test logs through them.
+
+    #+begin_src sh :eval never
+      tests/01-block_order.test | tappy
+      find tests -name '*.log' -exec tappy '{}' \;
+    #+end_src
+
+  - Tests now pass when running on Windows with MSYS2 since there is
+    no longer a potential conflict between line ending style on MSYS2
+    utility output and the line ending style of files representing the
+    correct result.
+
+- Clarify the usage of commas in variable values
+
+  The usage of commas to delimit the values of the =words= parameter
+  was not explicitly stated. The documentation has been updated to
+  confirm that this usage is valid and provide an example which uses
+  this feature.
+
+*** Version 1.0 [2021-08-20]
+
+Initial release.
 
 ** Copyright and license
 
