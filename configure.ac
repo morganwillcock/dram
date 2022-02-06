@@ -1,5 +1,5 @@
 AC_PREREQ([2.71])
-AC_INIT([dram], [1.0])
+AC_INIT([dram], [1.1])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AM_INIT_AUTOMAKE([-Werror -Wall foreign subdir-objects])
