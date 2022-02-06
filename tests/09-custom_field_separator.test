@@ -14,6 +14,10 @@ block 2
 ```sh one,two,three
 block 3
 ```
+
+```sh_one_two_three_four
+block 4
+```
 EOF
 )
 
@@ -22,7 +26,7 @@ block 3
 EOF
 )" \
           "$(echo "$TEST_INPUT" | ./dram FS='[ ,]' words='sh two three')" \
-          "Custom FS as word separator"
+          "Custom FS as field separator"
 
 
 tap_check "$(cat <<'EOF'
@@ -30,4 +34,18 @@ block 3
 EOF
 )" \
           "$(echo "$TEST_INPUT" | ./dram -v FS='[ ,]' words='sh two three')" \
-          "Custom FS as word separator using -v"
+          "Custom FS as field separator using -v"
+
+tap_check "$(cat <<'EOF'
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram FS=_ blocks=3,4 words='sh three four')" \
+          "Custom FS is independent of block separator"
+
+tap_check "$(cat <<'EOF'
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram FS=_ blocks='3 4' words='sh,three,four')" \
+          "Custom FS is independent of words separator"
