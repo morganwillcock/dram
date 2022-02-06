@@ -399,6 +399,20 @@ interpreter allows easy targeting for which blocks will be executed.
 => 3: Python 2 says goodbye
 #+end_example
 
+For convenience the word selection can also be specified using commas
+to separate the values.
+
+#+begin_src sh
+  dram words='python3,py' multi_language.md | msg=goodbye python3
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=> 1: Python 3 says goodbye
+=> 2: Python 3 says goodbye
+=> 3: Python 3 says goodbye
+#+end_example
+
 Note that the order of the blocks in the source document and selection
 criteria are critical to result. In this instance the default ordering
 infers that the third block acts as a potential header for the code in
