@@ -3,11 +3,13 @@
 #+OPTIONS: ^:nil
 #+OPTIONS: author:nil
 #+OPTIONS: num:nil
+#+PROPERTY: header-args :dir tangled
+#+PROPERTY: header-args+ :mkdirp yes
 #+PROPERTY: header-args:markdown :eval never
 #+PROPERTY: header-args:org :eval never
 #+PROPERTY: header-args:sh :exports both
 #+PROPERTY: header-args:sh+ :post prefix-results(results=*this*)
-#+PROPERTY: header-args:sh+ :prologue "PATH=$(cd .. && pwd):$PATH"
+#+PROPERTY: header-args:sh+ :prologue "PATH=$(cd ../.. && pwd):$PATH"
 #+PROPERTY: header-args:sh+ :results raw
 #+PROPERTY: header-args:sh+ :wrap example
 #+MACRO: version (eval (progn (defvar dram-version "DEV") dram-version))
@@ -82,7 +84,7 @@ Remove the box art which is written unconditionally by the ASCII exporter.
 =dram= is a utility intended to export block content from plain-text
 files. Given a source document such as this one:
 
-#+begin_src markdown :tangle say_hello.md
+#+begin_src markdown :tangle tangled/say_hello.md
 # Say hello
 
 ## Set the message
@@ -188,7 +190,7 @@ document.
 
 Given the following source document:
 
-#+begin_src markdown :tangle three_blocks.md
+#+begin_src markdown :tangle tangled/three_blocks.md
 # Heading
 
 ```
@@ -279,7 +281,7 @@ directly into stdin of a script interpreter.
 
 Given the follow source document:
 
-#+begin_src markdown :tangle say_message.md
+#+begin_src markdown :tangle tangled/say_message.md
 ```sh
 msg=hi
 ```
@@ -352,7 +354,7 @@ compiler.
 
 Given the following source document:
 
-#+begin_src markdown :tangle multi_language.md
+#+begin_src markdown :tangle tangled/multi_language.md
 ```sh
 echo hello
 ```
@@ -456,7 +458,7 @@ info-string text.
 
 Given the following source document:
 
-#+begin_src markdown :tangle tcl.md
+#+begin_src markdown :tangle tangled/tcl.md
 ```sh tcl
 echo Opening the Tcl website...
 xdg-open https://www.tcl-lang.org/
@@ -498,7 +500,7 @@ content to appear within the block whilst keeping it opening.
 
 Given the following source document:
 
-#+begin_src markdown :tangle symetrical_blocks.md
+#+begin_src markdown :tangle tangled/symetrical_blocks.md
 ````
 ```
 `````
@@ -560,7 +562,7 @@ differs from the pattern used to open the block.
 
 Given the following source document:
 
-#+begin_src org :tangle say_hello.org
+#+begin_src org :tangle tangled/say_hello.org
 ,#+begin_src sh
 echo hello
 ,#+end_src

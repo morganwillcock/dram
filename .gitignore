@@ -11,4 +11,5 @@ config.log
 config.status
 configure
 dram
+source/tangled
 tests/*.test.*

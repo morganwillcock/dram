@@ -48,5 +48,4 @@ dist-hook: ChangeLog README
 
 clean-local:
 	find tests -name "*.test.*" -exec rm '{}' \;
-	find source -name "*.md" -exec rm '{}' \;
-	find source \( -name "*.org" ! -name README.org \) -exec rm '{}' \;
+	rm -rf source/tangled
