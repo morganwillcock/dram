@@ -706,7 +706,7 @@ The block selection process runs in the follow order:
 :ID:       3594bd9a-59c7-4a83-98f5-2531257ead3c
 :END:
 
-*** Version 1.1 (unreleased)
+*** Version 1.1 [2022-02-12]
 
 - Add expansion of numeric ranges to block number processing
 

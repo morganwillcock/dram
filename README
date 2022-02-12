@@ -1,6 +1,6 @@
                                __________
 
-                                DRAM 1.0
+                                DRAM 1.1
                                __________
 
 
@@ -19,6 +19,9 @@ Examples
 Reference
 .. Optional variables (arguments)
 .. Processing order
+.. Change log
+..... Version 1.1 (2022-02-12)
+..... Version 1.0 (2021-08-20)
 .. Copyright and license
 
 
@@ -175,6 +178,18 @@ Selection based on block ordering
     dram blocks=-4,0,1,4 three_blocks.md
   
     => one
+  
+  Strings representing a numeric range are expanded to become a sequence
+  of block numbers.
+
+    dram blocks=1-3,3-1 three_blocks.md
+  
+    => one
+    => two
+    => three
+    => three
+    => two
+    => one
 
 
 Executing code
@@ -283,6 +298,15 @@ Selection based on info-string words
     => 1: Python 2 says goodbye
     => 2: Python 2 says goodbye
     => 3: Python 2 says goodbye
+  
+  For convenience the word selection can also be specified using commas
+  to separate the values.
+
+    dram words='python3,py' multi_language.md | msg=goodbye python3
+  
+    => 1: Python 3 says goodbye
+    => 2: Python 3 says goodbye
+    => 3: Python 3 says goodbye
   
   Note that the order of the blocks in the source document and selection
   criteria are critical to result. In this instance the default ordering
@@ -458,7 +482,8 @@ Optional variables (arguments)
 
         By default block content is output in the order that it appears
         in the source file. By specifying a space or comma separated
-        list of block numbers the ordering may be modified.
+        list of block numbers or strings representing a numeric range
+        the ordering may be modified.
 
         The value of 1 represents the first block. Negative values
         select from the end of the list; -1 represents the final
@@ -466,6 +491,12 @@ Optional variables (arguments)
 
           # get the content from the first and last block
           dram blocks=1,-1 $INPUT_FILE
+  
+        A string representing a numeric range should take the form of
+        `start-end'. Negative values for `start' or `end' are supported.
+
+          # get the content from the first 3 blocks and last 3 blocks
+          dram blocks=1-3,-3--1 $INPUT_FILE
 
   words
         Words which must appear in the info-string text to qualify the
@@ -509,6 +540,75 @@ Processing order
     `pattern'
   - Blocks are deselected if the trimmed info-string text does not
     contain all of the words specified as the value of `words'
+
+
+Change log
+~~~~~~~~~~
+
+Version 1.1 (2022-02-12)
+------------------------
+
+  - Add expansion of numeric ranges to block number processing
+
+    As a convenience for specifying a sequence of block numbers, where
+    the components of the blocks parameter appear to take the form of a
+    numeric range this range is expanded.
+
+    Following this change `blocks=1-3' is equivalent to `blocks=1,2,3'.
+
+  - Enable VPATH builds for documentation files
+
+    Initially the build targets for the documentation were only
+    functional when building within the source directory. The build
+    process now adjusts its working directory and the license file is
+    linked into position to enable VPATH builds for the README and
+    ChangeLog files.
+
+    This allows the "distcheck" target to run in VPATH builds.
+
+  - Switch tests to use Test Anything Protocol
+
+    The included test scripts have been modified to produce output which
+    should conform to version 12 of the Test Anything Protocol (TAP)
+    Specification. The output of the test scripts is read by a TAP
+    consumer supplied as part of GNU Automake. As part of this change
+    the expected and observed outputs of each test are no longer written
+    to disk and compared with the `diff' utility, instead these values
+    are kept as strings and compared within the testing script. The
+    observed output of the test is emitted from each test as a sequence
+    of TAP diagnostic lines.
+
+    Following these changes:
+
+    - To view the observed output of every test as it runs modify the
+      environment variable `TEST_LOG_DRIVER_FLAGS' to include the option
+      "--comments".
+
+        TEST_LOG_DRIVER_FLAGS=--comments make check
+
+    - Alternative TAP consumers can be used by spooling the test script
+      output or the Automake test logs through them.
+
+        tests/01-block_order.test | tappy
+        find tests -name '*.log' -exec tappy '{}' \;
+
+    - Tests now pass when running on Windows with MSYS2 since there is
+      no longer a potential conflict between line ending style on MSYS2
+      utility output and the line ending style of files representing the
+      correct result.
+
+  - Clarify the usage of commas in variable values
+
+    The usage of commas to delimit the values of the `words' parameter
+    was not explicitly stated. The documentation has been updated to
+    confirm that this usage is valid and provide an example which uses
+    this feature.
+
+
+Version 1.0 (2021-08-20)
+------------------------
+
+  Initial release.
 
 
 Copyright and license
