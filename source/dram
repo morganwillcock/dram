@@ -85,9 +85,71 @@ BEGIN {
     }
 }
 
+function set_expanded(numstr,    count, range, to, from, step, i) {
+    ## check for invalid characters
+    if (!match(numstr, /^[-0-9]+$/)) {
+        expanded[1] = 0
+        return 1
+    }
+
+    ## single number
+    if (match(numstr, /^-?[0-9]+$/)) {
+        expanded[1] = numstr
+        return 1
+    }
+
+    count = split(numstr, range, /-/)
+
+    ## invalid syntax
+    if (count > 4) {
+        expanded[1] = 0
+        return 1
+    }
+
+    ## get the the from and two values
+    to = range[count]
+    from = range[count - 1]
+
+    if (from == "") {
+        to = to * -1
+        from = range[count - 2]
+    }
+
+    if (range[1] == "") {
+        from = from * -1
+    }
+
+    ## set the direction to step in
+    step = to >= from ? 1 : -1
+    count = 0
+
+    for(i = from; i != to + step; i += step) {
+        expanded[++ count] = i
+    }
+
+    return count
+}
+
+function set_blocks(    count, blocks_split, expanded_count, i, j, k) {
+    count = split(blocks, blocks_split, /[ \t,]/)
+    if (!count) { return 0 }
+    k = 0
+
+    for (i = 1; i <= count; i ++) {
+        expanded_count = set_expanded(blocks_split[i])
+
+        for (j = 1; j <= expanded_count; j ++) {
+            order[++k] = expanded[j];
+        }
+    }
+
+    delete expanded
+    return k
+}
+
 function set_order(    custom, count, i) {
     ## create order array based on splitting block sequence argument
-    custom = split(blocks, order, /[ \t,]/)
+    custom = set_blocks()
 
     if (custom) {
         ## rewrite order to remove out of range values

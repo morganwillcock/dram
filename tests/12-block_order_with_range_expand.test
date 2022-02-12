@@ -1,0 +1,126 @@
+#!/bin/sh
+
+. tests/setup
+
+TEST_INPUT=$(cat <<'EOF'
+```
+block 1
+```
+
+``` 
+block 2
+```
+
+```
+block 3
+```
+
+```
+block 4
+```
+EOF
+)
+
+tap_check "$(cat <<'EOF'
+block 1
+block 2
+block 3
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=1-4)" \
+          "Expand to full range"
+
+tap_check "$(cat <<'EOF'
+block 4
+block 3
+block 2
+block 1
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=4-1)" \
+          "Expand to full range in reverse order"
+
+tap_check "$(cat <<'EOF'
+block 1
+block 2
+block 3
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-4--1)" \
+          "Expand to full negative range"
+
+tap_check "$(cat <<'EOF'
+block 4
+block 3
+block 2
+block 1
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-1--4)" \
+          "Expand to full negative range in reverse order"
+
+tap_check "$(cat <<'EOF'
+block 3
+block 4
+block 1
+block 2
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-2-2)" \
+          "Expand to full range from negative to positive"
+
+tap_check "$(cat <<'EOF'
+block 2
+block 1
+block 4
+block 3
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=2--2)" \
+          "Expand to full range from negative to positive"
+
+tap_check "$(cat <<'EOF'
+block 2
+block 3
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=2-3)" \
+          "Expand to middle range"
+
+tap_check "$(cat <<'EOF'
+block 2
+block 3
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-3--2)" \
+          "Expand to negative middle range"
+
+tap_check "$(cat <<'EOF'
+block 1
+block 2
+block 3
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-4--3,3-4)" \
+          "Expand multiple ranges"
+
+tap_check "$(cat <<'EOF'
+block 1
+block 2
+block 3
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks=-5--3,3-5)" \
+          "Ignore out-of-range values"
+
+tap_check "$(cat <<'EOF'
+block 2
+block 4
+EOF
+)" \
+          "$(echo "$TEST_INPUT" | ./dram blocks='--3--1,-3--1-,-3 - -1,-3a--1,6.7,')" \
+          "Ignore bad range values"

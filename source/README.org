@@ -273,6 +273,23 @@ does not return a value.
 => one
 #+end_example
 
+Strings representing a numeric range are expanded to become a sequence
+of block numbers.
+
+#+begin_src sh
+  dram blocks=1-3,3-1 three_blocks.md
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=> one
+=> two
+=> three
+=> three
+=> two
+=> one
+#+end_example
+
 ** Executing code
 
 Since content from all blocks is written to stdout the easiest way to
@@ -622,7 +639,8 @@ filenames which are specified if they are to be in-effect.
 
   By default block content is output in the order that it appears in
   the source file. By specifying a space or comma separated list of
-  block numbers the ordering may be modified.
+  block numbers or strings representing a numeric range the ordering
+  may be modified.
 
   The value of 1 represents the first block. Negative values select
   from the end of the list; -1 represents the final block. 0 returns
@@ -631,6 +649,14 @@ filenames which are specified if they are to be in-effect.
   #+begin_src sh :eval never
     # get the content from the first and last block
     dram blocks=1,-1 $INPUT_FILE
+  #+end_src
+
+  A string representing a numeric range should take the form of
+  =start-end=. Negative values for =start= or =end= are supported.
+
+  #+begin_src sh :eval never
+    # get the content from the first 3 blocks and last 3 blocks
+    dram blocks=1-3,-3--1 $INPUT_FILE
   #+end_src
 
 - words :: Words which must appear in the info-string text to qualify
@@ -681,6 +707,14 @@ The block selection process runs in the follow order:
 :END:
 
 *** Version 1.1 (unreleased)
+
+- Add expansion of numeric ranges to block number processing
+
+  As a convenience for specifying a sequence of block numbers, where
+  the components of the blocks parameter appear to take the form of a
+  numeric range this range is expanded.
+
+  Following this change =blocks=1-3= is equivalent to =blocks=1,2,3=.
 
 - Enable VPATH builds for documentation files
 
